@@ -47,7 +47,7 @@ https://nodejs.org/ru
 7. <a href="#Подключение JWT">Подключение JWT</a><br>
 8. <a href="#Endpoints">Endpoints</a><br>
 9. <a href="#Models">Models</a><br>
-10. <a href="#XXX">XXX</a><br>
+10. <a href="#Validators">Validators</a><br>
 11. <a href="#XXX">XXX</a><br>
 12. <a href="#XXX">XXX</a><br>
 13. <a href="#XXX">XXX</a><br>
@@ -405,8 +405,68 @@ const token = jwt.sign({
 
 ***
 
+<a id="Validators"></a>
+### 10. Validators
+
+<br>
+
+Для начала устанавливаем библиотеку валидатора:
+> npm install express-validator
+
+Далее создаем папку для хранения всех наших валидаций:
+> mkdir validations
+
+Далее созлаем файл с валидатором:
+> nano auth.js
+> ```
+> import { body } from 'express-validator'
+> 
+> export const registerValidation = [
+>     body('email').isEmail(),                // Если в запросе будет именно Email тогда пропускаем дальше
+>     body('password').isLength({min: 5}),    // Если длинна пароля минимум 5 символов тогда пропускаем дальше
+>     body('fillName').isLength({min: 3}),    // Если длинна имени минимум 5 символов тогда пропускаем дальше
+>     body('avatarUrl').optional().isURL,     // Опциональное (не обязательное поле), если в нем ссылка тогда пропускаем дальше
+> ]
+> ```
+> 
+> Или еще можно немного кастомизировать сообщения ошибок:
+> ```
+> export const registerValidation = [
+>     body('email', 'Неверный формат почты').isEmail(),
+>     body('password', 'Пароль должен быть минимум 5 символов').isLength({min: 5}),
+>     body('fullName', 'Укажите имя (минимум 3 символа)').isLength({min: 3}),
+>     body('avatarUrl', 'Неверная ссылка на аватарку').optional().isURL(),
+> ]
+> ```
+
+И далее уже прикручиваем наш валидатор и тестируем POST запрос:
+> nano index.js
+> ```
+> ...
+> import { validationResult } from 'express-validator'
+> import { registerValidation } from './validations/auth.js'
+> 
+> ...
+> app.post('/auth/register', registerValidation, (req, res) => {
+> 
+>     const errors = validationResult(req);
+>     if (!errors.isEmpty()) {
+>         return res.status(400).json(errors.array())
+>     }
+>     
+>     res.json({
+>         success: true,
+>     })
+> })
+> ...
+> ```
+
+<br><br><br>
+
+***
+
 <a id="XXX"></a>
-### 10. XXX
+### 11. XXX
 
 <br>
 
@@ -425,7 +485,64 @@ YYY
 ***
 
 <a id="XXX"></a>
-### 11. XXX
+### 12. XXX
+
+<br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+### 13. XXX
+
+<br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+### 14. XXX
+
+<br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+### 15. XXX
 
 <br>
 

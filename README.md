@@ -57,7 +57,7 @@ https://nodejs.org/ru
 11. <a href="#Connect MongoDB">Connect MongoDB</a><br>
 12. <a href="#DB - CRUD">DB - CRUD</a><br>
 13. <a href="#Шифрование паролей">Шифрование паролей</a><br>
-14. <a href="#XXX">XXX</a><br>
+14. <a href="#Регистрация и Авторизация пользователей">Регистрация и Авторизация пользователей</a><br>
 15. <a href="#XXX">XXX</a><br>
 
 <br><br><br>
@@ -538,38 +538,49 @@ const token = jwt.sign({
 
 <br>
 
-> nano index.js
-> ```
-> ...
-> 
-> import UserModel from './models/User.js'
-> 
-> ...
-> 
-> app.post('/auth/register', registerValidation, async (req, res) => {
-> 
->     ...
-> 
->     const doc = new UserModel({
->         email: req.body.email,
->         fullName: req.body.fullName,
->         avatarUrl: req.body.avatarUrl,
->         passwordHash: hash,
->     })
-> 
->     const user = await doc.save();
-> 
->     const { passwordHash, ...userData} = user._doc;     // При помощи Декструктуризации вытащить пароль (и дальше его просто не использовать)
-> 
->     res.json({... user._doc})             // or:      res.json({... user._doc, token})
-> })
-> 
-> ...
-> ``` 
+### Получить запись из БД:
+
+```
+const user = await UserModel.findOne({ email: req.body.email });
+ 
+if (!user) {
+    return res.status(404).json({message: 'В базе нет данного пользователя'})
+}
+```
+
+<br><br>
+
+### Создаем запись в БД:
+
+```
+...
+
+import UserModel from './models/User.js'
+ 
+...
+ 
+app.post('/auth/register', registerValidation, async (req, res) => {
+
+    ...
+
+    const doc = new UserModel({
+        email: req.body.email,
+        fullName: req.body.fullName,
+        avatarUrl: req.body.avatarUrl,
+        passwordHash: hash,
+    })
+
+    const user = await doc.save();
+
+    res.json({... user._doc})
+})
+
+...
+``` 
 
 Теперь отправляем POST запрос на адрес `http://localhost:4444/auth/register` со следующими данными:
 
-```bash
+```
 {
     "email": "test@test.com",
     "password": "12345",
@@ -582,7 +593,7 @@ const token = jwt.sign({
 
 Ответ на наш запрос мы получаем примерно следующим: 
 
-```bash
+```
 {
     "user": {
         "fullName": "Вася Пупкин",
@@ -602,7 +613,7 @@ const token = jwt.sign({
 ***
 
 <a id="Шифрование паролей"></a>
-### 12. Шифрование паролей
+### 13. Шифрование паролей
 
 <br>
 Для начала устанавливаем библиотеку:
@@ -639,39 +650,113 @@ const token = jwt.sign({
 
 ***
 
-<a id="XXX"></a>
-### 13. XXX
+<a id="Регистрация и Авторизация пользователей"></a>
+### 14. Регистрация и Авторизация пользователей
 
 <br>
 
-```bash
-XXX
-YYY
+### Регистрация пользователей
+
 ```
+...
 
-> XXX
-> ```
-> XXX
-> ``` 
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { validationResult } from 'express-validator';
+import { registerValidation } from './validations/auth.js';
+import UserModel from './models/User.js';
 
-<br><br><br>
+...
 
-***
+app.post('/auth/register', registerValidation, async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors.array())
+        }
 
-<a id="XXX"></a>
-### 14. XXX
+        const password = req.body.password;
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt)
 
-<br>
+        const doc = new UserModel({
+            email: req.body.email,
+            fullName: req.body.fullName,
+            avatarUrl: req.body.avatarUrl,
+            passwordHash: hash,
+        })
 
-```bash
-XXX
-YYY
+        const user = await doc.save();
+
+        const token = jwt.sign({
+            _id: user._id,
+        }, 'MySecret123', {
+            expiresIn: '30d'
+        });
+
+        const { passwordHash, ...userData} = user._doc;     // При помощи Декструктуризации вытащить пароль (и дальше его просто не использовать)
+
+        res.json({... userData, token})
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({message: 'Не удалось зарегистрироваться'})
+    }
+})
+
+...
+```  
+
+### Авторизация пользователей
+
 ```
+...
 
-> XXX
-> ```
-> XXX
-> ``` 
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import UserModel from './models/User.js';
+
+...
+
+app.post('/auth/login', async (req, res) => {
+    try {
+
+
+        // Достать из БД необходимого пользователя
+        const user = await UserModel.findOne({ email: req.body.email });
+
+
+        // Проверить, есть ли в БД данный пользователь. Если нет - выдать ошибку
+        if (!user) {return res.status(404).json({message: 'Неверный логин или пароль'})}
+
+
+        // Проверка на одинаковость паролей
+        const isValidPass = await bcrypt.compare(req.body.password, user._doc.passwordHash);
+
+
+        // Если пароли не одинаковы - выдать ошибку
+        if (!isValidPass) {return res.status(404).json({message: 'Неверный логин или пароль'})}
+
+
+        // Создать токен со сроком действия на 7 дней
+        const token = jwt.sign({
+            _id: user._id
+        }, 'MySecret123', {
+            expiresIn: '7d'
+        });
+
+
+        // Извлечь из ответа хеш пароля, что-бы его случайно не передать в ответе
+        const { passwordHash, ...userData} = user._doc;
+
+        res.json({... userData, token})
+
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({message: 'Не удалось авторизоваться'})
+    }
+})
+```
 
 <br><br><br>
 
@@ -679,6 +764,25 @@ YYY
 
 <a id="XXX"></a>
 ### 15. XXX
+
+<br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+### 16. XXX
 
 <br>
 

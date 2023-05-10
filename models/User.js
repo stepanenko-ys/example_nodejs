@@ -14,9 +14,9 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    avatarUrl: String,  // Это поле не Объект, поэтому его нельзя сделать уникальным
+    avatarUrl: String,
 }, {
-    timestamps: true,   // Добавить дату создания и обновления данного объекта
+    timestamps: true,
 });
 
 export default mongoose.model('User', UserSchema);

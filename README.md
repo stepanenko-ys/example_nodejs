@@ -26,6 +26,12 @@ https://nodejs.org/ru
 
 <br>
 
+###### Уроки:
+
+1. https://youtu.be/GQ_pTmcXNrQ - MERN (4:24:12)
+
+<br>
+
 ###### Терминология:
 
 `NPM` - это NodeJS Packages Manager
@@ -48,9 +54,9 @@ https://nodejs.org/ru
 8. <a href="#Endpoints">Endpoints</a><br>
 9. <a href="#Models">Models</a><br>
 10. <a href="#Validators">Validators</a><br>
-11. <a href="#XXX">XXX</a><br>
-12. <a href="#XXX">XXX</a><br>
-13. <a href="#XXX">XXX</a><br>
+11. <a href="#Connect MongoDB">Connect MongoDB</a><br>
+12. <a href="#DB - CRUD">DB - CRUD</a><br>
+13. <a href="#Шифрование паролей">Шифрование паролей</a><br>
 14. <a href="#XXX">XXX</a><br>
 15. <a href="#XXX">XXX</a><br>
 
@@ -249,13 +255,6 @@ YYY
 > import jwt from 'jsonwebtoken';
 > import mongoose from 'mongoose';
 > 
->
-> mongoose                                    // Connect to MongoDB
->     .connect('mongodb+srv://ysstepanenko:i7W2a1uNGhtpA6ba@cluster0.bf3vcbl.mongodb.net/?retryWrites=true&w=majority')
->     .then(() => console.log('DB: ok'))
->     .catch((err) => console.log('DB: error', err)
-> );
-> 
 > 
 > const app = express();                      // Главное EXPRESS приложение
 > app.use(express.json());                    // Разрешить читать JSON из запросов                  
@@ -401,6 +400,8 @@ const token = jwt.sign({
 > export default mongoose.model('User', UserSchema); 
 > ```
 
+Далее импортируем её в нужное место таким образом `import UserModel from './models/User.js'` 
+
 <br><br><br>
 
 ***
@@ -454,9 +455,7 @@ const token = jwt.sign({
 >         return res.status(400).json(errors.array())
 >     }
 >     
->     res.json({
->         success: true,
->     })
+>     res.json({success: true})
 > })
 > ...
 > ```
@@ -465,39 +464,154 @@ const token = jwt.sign({
 
 ***
 
-<a id="XXX"></a>
-### 11. XXX
+<a id="Connect MongoDB"></a>
+### 11. Connect MongoDB
 
 <br>
 
-```bash
-XXX
-YYY
-```
+###### Создание новой Базы Данных на сервере:
 
-> XXX
+Для начала необходимо зайти на официальный сайт `MongoDB` и пройти регистрацию по кнопке `Try Free`
+> https://www.mongodb.com/
+
+Далее мы попадаем в Панель администратора, где необходимо создать новую БД нажав на кнопку `Create`.
+
+Далее выбрать бесплатный вариант БД `Shared` и выбрать месторасположение сервера, например `Frankfurt (eu-central-1)`.
+
+После успешного создания БД нажимаем кнопку `Connect` и выбираем раздел `Connect to your application`.
+
+В открывшемся окошке мы получаем нашу ссылку для подключения к Базе Данных, вроде этой: 
+
+> mongodb+srv://ysstepanenko:<password>@cluster0.bf3vcbl.mongodb.net/?retryWrites=true&w=majority
+
+<br><br>
+
+###### Подключение БД к проекту:
+
+А далее уже устанавливаем библиотеку "mongodb" командой `npm install mongodb` и библиотеку "mongoose" командой `npm install mongoose`.
+
+Затем покдлючаем нашу MongoDB к проекту:
+
+> nano index.js
 > ```
-> XXX
-> ``` 
+> ...
+> import mongoose from 'mongoose';
+> ...
+> mongoose
+>     .connect('mongodb+srv://ysstepanenko:i7W2a1uNGhtpA6ba@cluster0.bf3vcbl.mongodb.net/test?retryWrites=true&w=majority')
+>     .then(() => console.log('DB: ok'))
+>     .catch((err) => console.log('DB: error', err)
+> );
+> ```
+> Обратите внимание что, в нашу ссылку мы принудительно добавили название базы данных `test`. Таким образом мы можем написать вместо `test` любое новое название БД и она автоматически создастся при выполнении следующего запроса к БД.
+
+<br><br>
+
+###### Просмотр содержимого БД:
+
+Для просмотра содержимого MongoDB можно например использовать программу `Mongodb Compass Community`
+> https://www.mongodb.com/try/download/shell
+
+Ну или просто настроить подключение в `PyCharm`
 
 <br><br><br>
 
 ***
 
-<a id="XXX"></a>
-### 12. XXX
+<a id="DB - CRUD"></a>
+### 12. DB - CRUD
 
 <br>
 
+> nano index.js
+> ```
+> ...
+> 
+> import UserModel from './models/User.js'
+> 
+> ...
+> 
+> app.post('/auth/register', registerValidation, async (req, res) => {
+> 
+>     ...
+> 
+>     passwordHash = ...
+> 
+>     const doc = new UserModel({
+>         email: req.body.email,
+>         fullName: req.body.fullName,
+>         avatarUrl: req.body.avatarUrl,
+>         passwordHash,
+>     })
+> 
+>     const user = await doc.save();
+> 
+>     res.json({user})
+> })
+> 
+> ...
+> ``` 
+
+Теперь отправляем POST запрос на адрес `http://localhost:4444/auth/register` со следующими данными:
+
 ```bash
-XXX
-YYY
+{
+    "email": "test@test.com",
+    "password": "12345",
+    "fullName": "Вася Пупкин",
+    "avatarUrl": "https://xxx.ua/photo.jpg"
+}
 ```
 
-> XXX
+И у нас в БД создается новый пользователь.
+
+Ответ на наш запрос мы получаем примерно следующим: 
+
+```bash
+{
+    "user": {
+        "fullName": "Вася Пупкин",
+        "email": "test@test.com",
+        "passwordHash": "$2b$10$.iZnGrNNGuC3k/mGNBeAA.72fnqw.ANmCF/rW3OXjCSVYahqk1/m6",
+        "avatarUrl": "https://xxx.ua/photo.jpg",
+        "_id": "645b594684c32a5ceec95806",
+        "createdAt": "2023-05-10T08:43:50.269Z",
+        "updatedAt": "2023-05-10T08:43:50.269Z",
+        "__v": 0
+    }
+}
+```
+
+<br><br><br>
+
+***
+
+<a id="Шифрование паролей"></a>
+### 12. Шифрование паролей
+
+<br>
+Для начала устанавливаем библиотеку:
+
+> npm install bcrypt
+
+И далее импортируем и настраиваем шифрование:
+
+> nano index.js
 > ```
-> XXX
+> ...
+> import bcrypt from 'bcrypt';
+> ...
+> app.post('/auth/register', registerValidation, async (req, res) => {
+>     ...
+>     const password = req.body.password;
+>     const salt = await bcrypt.genSalt(10);
+>     const passwordHash = await bcrypt.hash(password, salt) 
+>     ...
+> })
 > ``` 
+> Обратите внимание! К ендпоинту мы добавили работу в режиме "async" и это позволило использовать библиотеку bcrypt в асинхронном режиме (await bcrypt).
+
+В итоге мы получаем вместо открытого пароля `12345` зашифрованный: `$2b$10$kgcH9UR8OS140nDUArRq0.F946tV2dldDRgCmmhAdYVfCSWfTNflW` 
 
 <br><br><br>
 

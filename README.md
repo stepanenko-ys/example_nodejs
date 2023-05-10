@@ -305,7 +305,9 @@ const token = jwt.sign({
     email: req.body.email,
     password: req.body.password,
     fullName: 'Вася Пупкин',
-}, 'MySecret123');
+}, 'MySecret123', {                // Ключ шифрования
+  expiresIn: '30d'                 // Срок жизни токена
+});
 ```
 Где ключ шифрования 'MySecret123' может быть любым. 
 
@@ -417,7 +419,7 @@ const token = jwt.sign({
 Далее создаем папку для хранения всех наших валидаций:
 > mkdir validations
 
-Далее созлаем файл с валидатором:
+Далее создаем файл с валидатором:
 > nano auth.js
 > ```
 > import { body } from 'express-validator'
@@ -444,21 +446,34 @@ const token = jwt.sign({
 > nano index.js
 > ```
 > ...
+> 
 > import { validationResult } from 'express-validator'
 > import { registerValidation } from './validations/auth.js'
 > 
 > ...
-> app.post('/auth/register', registerValidation, (req, res) => {
 > 
->     const errors = validationResult(req);
->     if (!errors.isEmpty()) {
->         return res.status(400).json(errors.array())
->     }
+> app.post('/auth/register', registerValidation, (req, res) => {
+>     try {
+> 
+>         const errors = validationResult(req);
+>         if (!errors.isEmpty()) {
+>             return res.status(400).json(errors.array())
+>         }
+> 
+>         ...
 >     
->     res.json({success: true})
+>         res.json({success: true})
+>     } catch (err) {
+>         console.log(err);
+>         res.status(500).json({message: 'Не удалось зарегистрироваться'})
+>     }
 > })
 > ...
 > ```
+
+На этом этапе валидатор готов и работает!
+
+
 
 <br><br><br>
 
@@ -535,18 +550,18 @@ const token = jwt.sign({
 > 
 >     ...
 > 
->     passwordHash = ...
-> 
 >     const doc = new UserModel({
 >         email: req.body.email,
 >         fullName: req.body.fullName,
 >         avatarUrl: req.body.avatarUrl,
->         passwordHash,
+>         passwordHash: hash,
 >     })
 > 
 >     const user = await doc.save();
 > 
->     res.json({user})
+>     const { passwordHash, ...userData} = user._doc;     // При помощи Декструктуризации вытащить пароль (и дальше его просто не использовать)
+> 
+>     res.json({... user._doc})             // or:      res.json({... user._doc, token})
 > })
 > 
 > ...
@@ -599,15 +614,22 @@ const token = jwt.sign({
 > nano index.js
 > ```
 > ...
+> 
 > import bcrypt from 'bcrypt';
+> 
 > ...
+> 
 > app.post('/auth/register', registerValidation, async (req, res) => {
+> 
 >     ...
+> 
 >     const password = req.body.password;
 >     const salt = await bcrypt.genSalt(10);
 >     const passwordHash = await bcrypt.hash(password, salt) 
+> 
 >     ...
-> })
+> 
+>                                                                                                                               })
 > ``` 
 > Обратите внимание! К ендпоинту мы добавили работу в режиме "async" и это позволило использовать библиотеку bcrypt в асинхронном режиме (await bcrypt).
 
@@ -673,3 +695,5 @@ YYY
 <br><br><br>
 
 ***
+
+https://github.com/stepanenko-ys/example_nodejs

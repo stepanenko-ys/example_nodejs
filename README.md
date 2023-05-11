@@ -58,7 +58,9 @@ https://nodejs.org/ru
 12. <a href="#DB - CRUD">DB - CRUD</a><br>
 13. <a href="#Шифрование паролей">Шифрование паролей</a><br>
 14. <a href="#Регистрация и Авторизация пользователей">Регистрация и Авторизация пользователей</a><br>
-15. <a href="#XXX">XXX</a><br>
+15. <a href="#Загрузка картинок (Multer)">Загрузка картинок (Multer)</a><br>
+16. <a href="#XXX">XXX</a><br>
+17. <a href="#XXX">XXX</a><br>
 
 <br><br><br>
 
@@ -404,6 +406,19 @@ const token = jwt.sign({
 
 Далее импортируем её в нужное место таким образом `import UserModel from './models/User.js'` 
 
+<br><br>
+
+###### Все возможные поля:
+
+```
+imageUrl:   String,                                           // НЕ обязательное поле
+fullName:   { type: String, required: true, },                // Обязательное поле
+email:      { type: String, required: true, unique: true, },  // Обязательное + Уникальное поле
+tags:       { type: Array, default: [], },                    // Дефолтное значение
+viewsCount: { type: Number, default: 0 },
+user:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },   // Создание связи с юзером (типа ForeignKey в Django)
+```
+
 <br><br><br>
 
 ***
@@ -478,12 +493,6 @@ const token = jwt.sign({
 ### Все варианты валидаторов:
 
 
-> isLength
-> ```
-> body('title', 'Введите заголовок статьи').isLength({min: 3}),
-> ```
-
-
 > isEmail
 > ```
 > body('email', 'Неверный формат почты').isEmail(),
@@ -504,13 +513,21 @@ const token = jwt.sign({
 
 > isString
 > ```
-> body('imageUrl', 'Неверная ссылка на изображение').isString,
+> body('imageUrl', 'Неверная ссылка на изображение').isString(),
 > ```
+
+<br>
 
 Не обязательное поле описывается так `.optional()`:
 
 > body('avatarUrl', 'Неверная ссылка на аватарку').optional().isURL(),
-> 
+
+<br>
+
+Min / Max количество символов описывается так `.isLength({min: 3})`:
+
+> body('title', 'Введите заголовок статьи').isLength({min: 3}),
+
 <br><br><br>
 
 ***
@@ -583,9 +600,10 @@ const user = await UserModel.findOne({ email: req.body.email });
 // With "findById"
 const user = await UserModel.findById(req.userId);
  
-if (!user) {
-    return res.status(404).json({message: 'В базе нет данного пользователя'})
-}
+// Достать все статьи и связанных с ними юзеров
+const posts = await PostModel.find().populate('user').exec();
+
+
 ```
 
 <br><br>
@@ -645,6 +663,62 @@ app.post('/auth/register', registerValidation, async (req, res) => {
         "updatedAt": "2023-05-10T08:43:50.269Z",
         "__v": 0
     }
+}
+```
+<br><br>
+
+### Изменить запись в БД:
+###### updateOne
+
+```
+try {
+    const postId = req.params.id;
+
+    await PostModel.updateOne(
+        {
+            _id: postId
+        }, {
+            title: req.body.title,
+            text: req.body.text,
+            imageUrl: req.body.imageUrl,
+            tags: req.body.tags,
+            user: req.userId,
+        }
+    )
+    res.json({
+        success: true
+    })
+} catch (err) {
+    console.log(err);
+    res.status(500).json({message: 'Не удалось обновить статью'})
+}
+```
+
+<br><br>
+
+### Удалить запись из БД:
+###### findOneAndDelete
+
+```
+try {
+    const postId = req.params.id;
+
+    PostModel.findOneAndDelete({_id: postId})
+        .then((result) => {
+            if (result) {
+                res.status(200).json({ message: 'Статья успешно удалена' });
+            } else {
+                res.status(404).json({ message: 'Статья не найдена' });
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            return res.status(500).json({message: 'Не удалось удалить статью'})
+        })
+
+} catch (err) {
+    console.log(err);
+    res.status(500).json({message: 'Не удалось получить статью'})
 }
 ```
 
@@ -850,8 +924,8 @@ mkdir utils
 
 ***
 
-<a id="XXX"></a>
-### 15. XXX
+<a id="Загрузка картинок (Multer)"></a>
+### 15. Загрузка картинок (Multer)
 
 <br>
 

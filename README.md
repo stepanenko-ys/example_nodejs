@@ -473,8 +473,44 @@ const token = jwt.sign({
 
 На этом этапе валидатор готов и работает!
 
+<br>
+
+### Все варианты валидаторов:
 
 
+> isLength
+> ```
+> body('title', 'Введите заголовок статьи').isLength({min: 3}),
+> ```
+
+
+> isEmail
+> ```
+> body('email', 'Неверный формат почты').isEmail(),
+> ```
+
+
+> isURL
+> ```
+> body('avatarUrl', 'Неверная ссылка на аватарку').isURL(),
+> ```
+
+
+> isArray
+> ```
+> body('tags', 'Неверный формат тегов (укажите массив)').isArray(),
+> ```
+
+
+> isString
+> ```
+> body('imageUrl', 'Неверная ссылка на изображение').isString,
+> ```
+
+Не обязательное поле описывается так `.optional()`:
+
+> body('avatarUrl', 'Неверная ссылка на аватарку').optional().isURL(),
+> 
 <br><br><br>
 
 ***
@@ -541,7 +577,11 @@ const token = jwt.sign({
 ### Получить запись из БД:
 
 ```
+// With "findOne"
 const user = await UserModel.findOne({ email: req.body.email });
+
+// With "findById"
+const user = await UserModel.findById(req.userId);
  
 if (!user) {
     return res.status(404).json({message: 'В базе нет данного пользователя'})
@@ -706,6 +746,8 @@ app.post('/auth/register', registerValidation, async (req, res) => {
 ...
 ```  
 
+<br>
+
 ### Авторизация пользователей
 
 ```
@@ -758,6 +800,52 @@ app.post('/auth/login', async (req, res) => {
 })
 ```
 
+<br>
+
+### Создание Middleware на проверку токена
+
+```bash
+mkdir utils
+```
+
+> nano utils/checkAuth.js
+> ```
+> import jwt from 'jsonwebtoken';
+> 
+> export default (req, res, next) => {
+>     const token = (req.headers.authorization || '').replace(/Bearer\s?/, '');      // следующая конструкция || '' возвращает STRING независимо от того есть ли токен в headers или нет.
+> 
+>     if (token) {
+>         try {
+>             const decoded = jwt.verify(token, 'MySecret123');
+>             req.userId = decoded._id
+>             next();
+>         } catch (err) {
+>             return res.status(403).json({
+>             message: 'Токен не действителен'
+>         })
+>         }
+>     } else {
+>         return res.status(403).json({
+>             message: 'JWT токен не предоставлен'
+>         })
+>     }
+> }
+> ```
+
+> nano index.js
+> ```
+> 
+> app.get('/auth/profile', checkAuth, async (req, res) => {   // Проверка на то, что "checkAuth" успешно отработает и будет выполнен "next()"
+> 
+>     const user = await UserModel.findById(req.userId);      // userId мы принудительно добавили в "req" в самом Middleware
+>         
+>     ...
+> 
+> })
+> 
+> ```
+> 
 <br><br><br>
 
 ***
@@ -785,6 +873,50 @@ YYY
 ### 16. XXX
 
 <br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+### 17. XXX
+
+<br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+### 99. XXX
+
+<br>
+
+######  Разные варианты импорта:
+
+> import { register, login, profile } from './controllers/UserController.js'
+
+> import * as UserController from './controllers/UserController.js'
 
 ```bash
 XXX

@@ -748,9 +748,9 @@ try {
 > 
 >     ...
 > 
->     const password = req.body.password;
->     const salt = await bcrypt.genSalt(10);
->     const passwordHash = await bcrypt.hash(password, salt) 
+>     const password = req.body.password;               // Получить пароль
+>     const salt = await bcrypt.genSalt(10);            // Сгенерировать соль
+>     const hash = await bcrypt.hash(password, salt)    // Создать Хеш пароля
 > 
 >     ...
 > 
@@ -919,7 +919,34 @@ mkdir utils
 > })
 > 
 > ```
+
+<br><br>
+
+### Еще один пример Middleware `handleValidationErrors`:
+
+> nano utils/handleValidationErrors.js
+> ```
+> import { validationResult } from "express-validator";
 > 
+> export default (req, res, next) => {
+>     const errors = validationResult(req);
+>     if (!errors.isEmpty()) {
+>         return res.status(400).json(errors.array())
+>     }
+>     next();
+> }
+> ```
+
+> nano index.js
+> ```
+> ...
+> 
+> app.post('/auth/login', loginValidation, handleValidationErrors, UserController.login)
+> app.post('/auth/register', registerValidation, handleValidationErrors, UserController.register)
+> 
+> ...
+> ```
+
 <br><br><br>
 
 ***
@@ -930,14 +957,57 @@ mkdir utils
 <br>
 
 ```bash
-XXX
-YYY
+npm install multer
 ```
 
-> XXX
+```bash
+mkdir uploads
+```
+
+> nano index.js
 > ```
-> XXX
-> ``` 
+> import multer from 'multer';
+> 
+> ...
+> 
+> const storage = multer.diskStorage({
+>     destination: (_, __, cb) => {
+>         cb(null, 'uploads')               // Null - означает что функция не получает никаких ошибок. 'uploads' - название папки для загрузки картинок
+>     },
+>     filename: (_, file, cb) => {
+>         cb(null, file.originalname)       // file.originalname - означает что нужно достать из файла оригинальное название
+>     },
+> })
+> const upload = multer({ storage })        // Подключить хранилище к Multer
+> 
+> ...
+> 
+> app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
+>     res.json({
+>         url: `/uploads/${req.file.originalname}`
+>     });
+> });
+> ```
+
+И далее отправляем POST запрос на адрес `http://localhost:4444/upload` и в body передаем картинку.
+
+Ответ от бека получаем примерно следующим:
+
+```
+{
+    "url": "/uploads/Screenshot-2023-05-09.png"
+}
+```
+
+<br><br>
+
+###### Настройка доступа к папке "static":
+
+> app.use('/uploads', express.static('uploads'))
+
+Если приходит запрос на "uploads" - тогда из библиотеки "express" взять функцию "static" и перенаправить в папку "uploads" а далее уже в ней искать файл.
+
+После этого ссылка на нашу картинку `http://localhost:4444/uploads/Screenshot-2023-05-09.png` уже будет работать.
 
 <br><br><br>
 

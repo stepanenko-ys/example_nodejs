@@ -50,6 +50,7 @@ https://nodejs.org/ru
 4. <a href="#Команды">Команды</a><br>
 5. <a href="#Структура проекта">Структура проекта</a><br>
 6. <a href="#Создание проекта">Создание проекта</a><br>
+7. <a href="#Перенос настроек в .env">Перенос настроек в .env</a><br>
 7. <a href="#Подключение JWT">Подключение JWT</a><br>
 8. <a href="#Endpoints">Endpoints</a><br>
 9. <a href="#Models">Models</a><br>
@@ -179,13 +180,45 @@ YYY
 #### Для начала нужно создать файл `package.json`
 > ```
 > npm init
+> npm init -y       (без задания вопросов "yes/no") 
 > ```
 > После запуска этой комманды просто со всем соглашаемся и постоянно нажимаем Enter
 
 <br><br>
 
 #### Далее устанавливаем библиотеку для создания веб-сервера с помощью NodeJS:
-> npm install express
+
+```bash
+npm install express
+```
+
+#### Базу данных PostgreSQL  
+
+```bash
+npm install pg
+```
+
+```bash
+npm install pg-hstore
+```
+
+#### ORM для базы данных
+
+```bash
+npm install sequelize
+```
+
+#### Для обращения из браузера к серверу
+
+```bash
+npm install cors
+```
+
+#### Задание переменных окружения
+
+```bash
+npm install dotenv 
+```
 
 <br><br>
 
@@ -201,7 +234,10 @@ YYY
 <br><br>
 
 #### Далее можно установить библиотеку для автоматического рестарта веб-сервера, когда мы редактируем что-либо в файлах: 
-> npm install nodemon
+
+```bash 
+npm install nodemon
+```
 
 И далее настрим ёё:
 
@@ -278,6 +314,45 @@ YYY
 >     if (err) {return console.log(err)}      // Если наш сервер не смог запуститься - Вывести ошибку
 >     console.log('Server OK');               // Если сервер запуститься - Вывести успешное сообщение
 > });
+> ```
+
+<br>
+
+###### Или вот второй вариант:
+
+> Файл index.js
+> ```
+> const express = require('express');
+> 
+> const PORT = 5000;
+> const app = express();
+> 
+> app.get('/', (req, res) => {                 // Обработка GET запроса
+>     res.send('Hello World');
+> });
+> 
+> app.listen(PORT, () => console.log(`Server started on port ${5000}`));
+> ```
+
+<br><br><br>
+
+***
+
+<a id="Перенос настроек в .env"></a>
+# 7. Перенос настроек в .env
+
+<br>
+
+> nano .evn
+> ```
+> PORT=7000
+> ```
+
+> nano index.js
+> ```
+> require('dotenv').config()
+> 
+> const PORT = process.env.PORT || 6000;
 > ```
 
 <br><br><br>

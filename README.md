@@ -53,9 +53,11 @@ https://nodejs.org/ru
 7. <a href="#Перенос настроек в .env">Перенос настроек в .env</a><br>
 7. <a href="#Подключение JWT">Подключение JWT</a><br>
 8. <a href="#Endpoints">Endpoints</a><br>
-9. <a href="#Models">Models</a><br>
 10. <a href="#Validators">Validators</a><br>
-11. <a href="#Connect MongoDB">Connect MongoDB</a><br>
+11. <a href="#Connect to MongoDB">Connect to MongoDB</a><br>
+9. <a href="#Models for MongoDB">Models (for mongodb)</a><br>
+11. <a href="#Connect to PostgreSQL">Connect to PostgreSQL</a><br>
+9. <a href="#Models for PostgreSQL">Models (for postgresql)</a><br>
 12. <a href="#DB - CRUD">DB - CRUD</a><br>
 13. <a href="#Шифрование паролей">Шифрование паролей</a><br>
 14. <a href="#Регистрация и Авторизация пользователей">Регистрация и Авторизация пользователей</a><br>
@@ -68,6 +70,7 @@ https://nodejs.org/ru
 ***
 
 <a id="Install"></a>
+
 ### 1. Install
 
 <br>
@@ -79,6 +82,7 @@ https://nodejs.org/ru
 ***
 
 <a id="UnInstall"></a>
+
 ### 2. UnInstall:
 
 <br>
@@ -98,7 +102,8 @@ YYY
 ***
 
 <a id="Check version"></a>
-### 3. Check version
+
+# 3. Check version
 
 <br>
 
@@ -126,7 +131,8 @@ YYY
 ***
 
 <a id="Команды"></a>
-### 4. Команды
+
+# 4. Команды
 
 <br>
 
@@ -160,7 +166,7 @@ YYY
 
 <a id="Структура проекта"></a>
 
-### 5. Структура проекта
+# 5. Структура проекта
 
 <br>
 
@@ -173,6 +179,7 @@ YYY
 ***
 
 <a id="Создание проекта"></a>
+
 # 6. Создание проекта
 
 <br>
@@ -190,22 +197,6 @@ YYY
 
 ```bash
 npm install express
-```
-
-#### Базу данных PostgreSQL  
-
-```bash
-npm install pg
-```
-
-```bash
-npm install pg-hstore
-```
-
-#### ORM для базы данных
-
-```bash
-npm install sequelize
 ```
 
 #### Для обращения из браузера к серверу
@@ -339,6 +330,7 @@ npm install nodemon
 ***
 
 <a id="Перенос настроек в .env"></a>
+
 # 7. Перенос настроек в .env
 
 <br>
@@ -360,6 +352,7 @@ npm install nodemon
 ***
 
 <a id="Подключение JWT"></a>
+
 # 7. Подключение JWT
 
 <br>
@@ -417,7 +410,8 @@ const token = jwt.sign({
 ***
 
 <a id="Endpoints"></a>
-### 8. Endpoints
+
+# 8. Endpoints
 
 <br>
 
@@ -444,62 +438,9 @@ const token = jwt.sign({
 
 ***
 
-<a id="Models"></a>
-### 9. Models
-
-<br>
-
-Для создания модели Пользователя выполняем следующие действия:
-
-> mkdir models
-
-> nano models/User.js
-> ```
-> import mongoose from 'mongoose';
-> 
-> const UserSchema = new mongoose.Schema({
->     fullName: {
->         type: String,
->         required: true,
->     },
->     email: {
->         type: String,
->         required: true,
->         unique: true,
->     },
->     passwordHash: {
->         type: String,
->         required: true,
->     },
->     avatarUrl: String,  // Это поле не Объект, поэтому его нельзя сделать уникальным
-> }, {
->     timestamps: true,   // Добавить дату создания и обновления данного объекта
-> });
-> 
-> export default mongoose.model('User', UserSchema); 
-> ```
-
-Далее импортируем её в нужное место таким образом `import UserModel from './models/User.js'` 
-
-<br><br>
-
-###### Все возможные поля:
-
-```
-imageUrl:   String,                                           // НЕ обязательное поле
-fullName:   { type: String, required: true, },                // Обязательное поле
-email:      { type: String, required: true, unique: true, },  // Обязательное + Уникальное поле
-tags:       { type: Array, default: [], },                    // Дефолтное значение
-viewsCount: { type: Number, default: 0 },
-user:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },   // Создание связи с юзером (типа ForeignKey в Django)
-```
-
-<br><br><br>
-
-***
-
 <a id="Validators"></a>
-### 10. Validators
+
+# 10. Validators
 
 <br>
 
@@ -607,8 +548,9 @@ Min / Max количество символов описывается так `.
 
 ***
 
-<a id="Connect MongoDB"></a>
-### 11. Connect MongoDB
+<a id="Connect to MongoDB"></a>
+
+# 11. Connect to MongoDB
 
 <br>
 
@@ -661,8 +603,268 @@ Min / Max количество символов описывается так `.
 
 ***
 
+<a id="Models for MongoDB"></a>
+
+# 9. Models for MongoDB
+
+<br>
+
+Для создания модели Пользователя выполняем следующие действия:
+
+```bash
+mkdir models
+```
+
+> nano models/User.js
+> ```
+> import mongoose from 'mongoose';
+> 
+> const UserSchema = new mongoose.Schema({
+>     fullName: {
+>         type: String,
+>         required: true,
+>     },
+>     email: {
+>         type: String,
+>         required: true,
+>         unique: true,
+>     },
+>     passwordHash: {
+>         type: String,
+>         required: true,
+>     },
+>     avatarUrl: String,  // Это поле не Объект, поэтому его нельзя сделать уникальным
+> }, {
+>     timestamps: true,   // Добавить дату создания и обновления данного объекта
+> });
+> 
+> export default mongoose.model('User', UserSchema); 
+> ```
+
+Далее импортируем её в нужное место таким образом `import UserModel from './models/User.js'` 
+
+<br><br>
+
+###### Все возможные поля:
+
+```
+imageUrl:   String,                                           // НЕ обязательное поле
+fullName:   { type: String, required: true, },                // Обязательное поле
+email:      { type: String, required: true, unique: true, },  // Обязательное + Уникальное поле
+tags:       { type: Array, default: [], },                    // Дефолтное значение
+viewsCount: { type: Number, default: 0 },
+user:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },   // Создание связи с юзером (типа ForeignKey в Django)
+```
+
+<br><br><br>
+
+***
+
+<a id="Connect to PostgreSQL"></a>
+
+# 11. Connect to PostgreSQL
+
+<br>
+
+###### Установка библиотек:
+
+```bash
+npm install pg
+```
+
+```bash
+npm install pg-hstore
+```
+
+<br>
+
+###### Установка ORM для базы данных:
+
+```bash
+npm install sequelize
+```
+
+<br>
+
+###### Конфигурирование БД:
+
+> nano .env
+> ```
+> ...
+> 
+> DB_NAME=node_store
+> DB_USER=postgres
+> DB_PASSWORD=root
+> DB_HOST=localhost
+> DB_PORT=5432
+> ```
+
+> nano db.js
+> ```
+> // Де-структуризация, потому-что модуль большой, а нам нужен именно этот класс
+> const {Sequelize} = require('sequelize')
+> 
+> // Экспортируем объект, который создаем из этого класса
+> module.exports = new Sequelize(
+>     process.env.DB_NAME,
+>     process.env.DB_USER,
+>     process.env.DB_PASSWORD,
+>     {
+>         dialect: 'postgres',
+>         host: process.env.DB_HOST,
+>         port: process.env.DB_PORT
+>     }
+> )
+> ```
+
+> nano index.js
+> ```
+> ...
+> 
+> const sequelize = require('./db')
+> 
+> await sequelize.authenticate()    // установка подключения к БД
+> await sequelize.sync()            // Сверка состояния БД со схемой данных
+> ```
+
+<br><br><br>
+
+***
+
+<a id="Models for PostgreSQL"></a>
+
+# 9. Models for PostgreSQL
+
+<br>
+
+
+```bash
+mkdir models
+```
+
+> nano models/models.js
+> ```
+> const sequelize = require('../db');
+> const { DataTypes } = require('sequelize');   // Для описания типов полей
+> 
+> const User = sequelize.define('user', {                                        // 'user' - Это название модели
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+>     email: {type: DataTypes.STRING, unique: true},
+>     password: {type: DataTypes.STRING},
+>     role: {type: DataTypes.STRING, defaultValue: "USER"},
+> })
+> 
+> const Basket = sequelize.define('basket', {                                    // 'basket' - Это название модели
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+> })
+> 
+> const BasketDevice = sequelize.define('basket_device', {                       // 'basket_device' - Это название модели
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+> })
+> 
+> const Device = sequelize.define('device', {
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+>     name: {type: DataTypes.STRING, unique: true, allowNull: false},
+>     price: {type: DataTypes.INTEGER, allowNull: false},
+>     rating: {type: DataTypes.INTEGER, defaultValue: 0},
+>     img: {type: DataTypes.STRING, allowNull: false},
+> })
+> 
+> const Type = sequelize.define('type', {
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+>     name: {type: DataTypes.STRING, unique: true, allowNull: false},
+> })
+> 
+> const Brand = sequelize.define('brand', {
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+>     name: {type: DataTypes.STRING, unique: true, allowNull: false},
+> })
+> 
+> const Rating = sequelize.define('rating', {
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+>     rate: {type: DataTypes.INTEGER, allowNull: false},
+> })
+> 
+> const DeviceInfo = sequelize.define('device_info', {
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+>     title: {type: DataTypes.STRING, allowNull: false},
+>     description: {type: DataTypes.STRING, allowNull: false},
+> })
+> 
+> const TypeBrand = sequelize.define('type_brand', {                             // Создание промежуточно таблицы для связи "ManyToMany"
+>     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},      // Остальные поля связи создавать не нужно, их "sequelize" добавит сам
+> })
+> 
+> User.hasOne(Basket)             // Связь "Один к Одному"
+> Basket.belongsTo(User)          // Сущность "Basket" принадлежит "User"
+> 
+> User.hasMany(Rating)            // Связь "Один ко Многим": Одна запись "User" содержит много записей "Rating"
+> Rating.belongsTo(User)          // Сущность "Rating" принадлежит "User"
+> 
+> Basket.hasMany(BasketDevice)
+> BasketDevice.belongsTo(Basket)
+> 
+> Type.hasMany(Device)
+> Device.belongsTo(Type)
+> 
+> Brand.hasMany(Device)
+> Device.belongsTo(Brand)
+> 
+> Device.hasMany(Rating)
+> Rating.belongsTo(Device)
+> 
+> Device.hasMany(BasketDevice)
+> BasketDevice.belongsTo(Device)
+> 
+> Device.hasMany(DeviceInfo)
+> DeviceInfo.belongsTo(Device)
+> 
+> Type.belongsToMany(Brand, {through: TypeBrand})           // Связь "Многие ко Многим": Много записей "Type" содержат много записей "Brand"
+> Brand.belongsToMany(Type, {through: TypeBrand})           // Связь "Многие ко Многим": Много записей "Brand" содержат много записей "Type"
+> 
+> module.exports = {                                        // Экспорт всех моделей для дальнейшей работы с ними из разных мест
+>     User,
+>     Basket,
+>     BasketDevice,
+>     Device,
+>     Type,
+>     Brand,
+>     Rating,
+>     TypeBrand,
+>     DeviceInfo
+> }
+> ```
+
+<br>
+
+> nano models/models.js
+> ```
+> ...
+> 
+> const models = require('./models/models')
+> 
+> ...
+> ```
+
+<br><br>
+
+###### Все возможные поля:
+
+```
+Integer...,
+String...,
+Image...,
+OneToMany...,
+ManyToMany...,
+```
+
+<br><br><br>
+
+***
+
 <a id="DB - CRUD"></a>
-### 12. DB - CRUD
+
+# 12. DB - CRUD
 
 <br>
 
@@ -802,7 +1004,8 @@ try {
 ***
 
 <a id="Шифрование паролей"></a>
-### 13. Шифрование паролей
+
+# 13. Шифрование паролей
 
 <br>
 Для начала устанавливаем библиотеку:
@@ -840,7 +1043,8 @@ try {
 ***
 
 <a id="Регистрация и Авторизация пользователей"></a>
-### 14. Регистрация и Авторизация пользователей
+
+# 14. Регистрация и Авторизация пользователей
 
 <br>
 
@@ -1027,7 +1231,8 @@ mkdir utils
 ***
 
 <a id="Загрузка картинок (Multer)"></a>
-### 15. Загрузка картинок (Multer)
+
+# 15. Загрузка картинок (Multer)
 
 <br>
 
@@ -1089,7 +1294,8 @@ mkdir uploads
 ***
 
 <a id="XXX"></a>
-### 16. XXX
+
+# 16. XXX
 
 <br>
 
@@ -1108,7 +1314,8 @@ YYY
 ***
 
 <a id="XXX"></a>
-### 17. XXX
+
+# 17. XXX
 
 <br>
 
@@ -1127,7 +1334,8 @@ YYY
 ***
 
 <a id="XXX"></a>
-### 99. XXX
+
+# 99. XXX
 
 <br>
 

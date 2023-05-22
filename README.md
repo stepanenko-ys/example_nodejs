@@ -62,8 +62,11 @@ https://nodejs.org/ru
 13. <a href="#Шифрование паролей">Шифрование паролей</a><br>
 14. <a href="#Регистрация и Авторизация пользователей">Регистрация и Авторизация пользователей</a><br>
 15. <a href="#Загрузка картинок (Multer)">Загрузка картинок (Multer)</a><br>
-16. <a href="#XXX">XXX</a><br>
-17. <a href="#XXX">XXX</a><br>
+16. <a href="#CORS">CORS</a><br>
+17. <a href="#QUERY параметры">QUERY параметры</a><br>
+18. <a href="#XXX">XXX</a><br>
+19. <a href="#XXX">XXX</a><br>
+20. <a href="#XXX">XXX</a><br>
 
 <br><br><br>
 
@@ -433,6 +436,88 @@ const token = jwt.sign({
 >     })
 > })
 > ```
+
+<br>
+
+```bash
+mkdir routes
+```
+
+> nano routes/index.js
+> ```
+> const Router = require('express')                 // Получаем Роутер из Экспресс
+> const router = new Router()                       // Создаем объект Роутер
+> 
+> const userRouter = require('./userRouter')        // Импортируем роуты из файла "userRouter"
+> const typeRouter = require('./typeRouter')        // Импортируем роуты из файла "typeRouter"
+> const brandRouter = require('./brandRouter')      // Импортируем роуты из файла "brandRouter"
+> const deviceRouter = require('./deviceRouter')    // Импортируем роуты из файла "deviceRouter"
+> 
+> router.use('/user', userRouter)
+> router.use('/type', typeRouter)
+> router.use('/brand', brandRouter)
+> router.use('/device', deviceRouter)
+> 
+> module.exports = router                           // Экспортируем Роутер
+> ```
+
+
+> nano routes/userRouter.js
+> ```
+> const Router = require('express')
+> const router = new Router()
+> const userController = require('../controllers/userController')
+> 
+> router.post('/registration', userController.registration)
+> router.post('/login', userController.login)
+> router.get('/auth', userController.check)
+> 
+> module.exports = router
+> ```
+
+
+```bash
+mkdir controllers
+```
+
+
+> nano controllers/userController.js
+> ```
+> class UserController {
+>     async registration(req, res){
+>         res.json({message: 'Its working !!!'})
+>     }
+>     async login(req, res){
+>         res.json({message: 'Its working !!!'})
+>     }
+>     async check(req, res){
+>         res.json({message: 'Its working !!!'})
+>     }
+> }
+> 
+> module.exports = new UserController()
+> ```
+
+
+> nano index.js
+> ```
+> ...
+> 
+> const router = require('./routes/index')
+> 
+> ...
+> 
+> app.use('/api', router)
+> 
+> ...
+> ```
+
+Теперь отправляем GET запрос на адрес `http://localhost:5000/api/user/auth` или просто переходим на этот URL из браузера и видим ответ:
+
+> {"message": "Its working !!!"}
+
+<br>
+
 
 <br><br><br>
 
@@ -1293,9 +1378,61 @@ mkdir uploads
 
 ***
 
+<a id="CORS"></a>
+
+# 16. CORS
+
+<br>
+
+```bash
+npm install cors
+```
+
+> nano index.js
+> ```
+> const cors = require('cors')
+> 
+> ...
+> 
+> // Настройка CORS для отправки запросов из браузера
+> app.use(cors())
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="QUERY параметры"></a>
+
+# 17. QUERY параметры
+
+<br>
+
+> nano index.js
+> ```
+> app.get('/', (req, res) => {
+>     const query = req.query;
+> 
+>     const {id} = req.query;         // Вытащить ID при помощи деструктуризации
+>     const {message} = req.query;    // Вытащить Message при помощи деструктуризации
+>     console.log(id)
+>     console.log(message)
+>     
+>     res.json(query)
+> }
+> ``` 
+
+Теперь отправляем GET запрос на адрес `http://localhost:5000/?id=123&message=Hello` или просто переходим на этот URL из браузера и видим ответ:
+
+> {"id":"123","message":"Hello"}
+
+<br><br><br>
+
+***
+
 <a id="XXX"></a>
 
-# 16. XXX
+# 18. XXX
 
 <br>
 
@@ -1315,7 +1452,27 @@ YYY
 
 <a id="XXX"></a>
 
-# 17. XXX
+# 19. XXX
+
+<br>
+
+```bash
+XXX
+YYY
+```
+
+> XXX
+> ```
+> XXX
+> ``` 
+
+<br><br><br>
+
+***
+
+<a id="XXX"></a>
+
+# 20. XXX
 
 <br>
 

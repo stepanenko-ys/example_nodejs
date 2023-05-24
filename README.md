@@ -1311,6 +1311,102 @@ mkdir utils
 > ...
 > ```
 
+<br><br>
+
+### Еще один пример Middleware `errorHandler`:
+
+```bash
+mkdir error
+```
+
+> nano error/ApiError.js
+> ```
+> class ApiError extends Error{                     // класс будет расширять Error
+>     constructor(status, message) {                // Реализация конструктора с двумя параметрами
+>         super();                                  // Вызываем родительский конструктор
+>         this.status = status
+>         this.message = message
+>     }
+> 
+>     static forbiden(message) {                    // Создание статической функции
+>         return new ApiError(403, message)         // Возвращаем новый объект ApiError
+>     }
+> 
+>     static badRequest(message) {                  // Создание статической функции
+>         return new ApiError(404, message)         // Возвращаем новый объект ApiError
+>     }
+> 
+>     static internal(message) {                    // Создание статической функции
+>         return new ApiError(500, message)         // Возвращаем новый объект ApiError
+>     }
+> }
+> 
+> module.exports = ApiError
+> ```
+
+```bash
+mkdir middleware
+```
+
+> nano middleware/ErrorHandlingMiddleware.js
+> ```
+> const ApiError = require('../error/ApiError')
+> 
+> module.exports = function (err, req, res, next) {                       // Экспорт функции Мидлевре, и должна принимать 4 обязательных параметра "Ошибка", "Запрос", "Ответ" и функцию "next" вызвав которую мы передадим управление следующему в цепочке Мидлвере
+>     if (err instanceof ApiError) {                                      // Если класс ошибки ApiError
+>         return res.status(err.status).json({message: err.message})      // Тогда в клиент возвращаем ответ со статус-кодом из ошибки
+>     }
+>     return res.status(500).json({message: 'Непредвиденная ошибка'})     // Обработка ошибки если не ApiError
+> }
+> ```
+
+> nano index.js
+> ```
+> ...
+> 
+> const errorHandler = require('./middleware/ErrorHandlingMiddleware')
+> 
+> ...
+> 
+> app.use(errorHandler)           // Внимание! middleware который работает с ошибками - обязательно должен идти и регистрироваться в самом конце.
+>                                 // Так как он является замыкающим - именно по этому мы нигде внутри него не вызвали функцию NEXT, потому-что на нем работа прекращается
+> ```
+
+> nano controllers/userController.js
+> ```
+> ...
+> 
+> const ApiError = require('../error/ApiError')
+> 
+> ...
+> 
+> class UserController {
+> 
+>     ...
+>
+>     async check(req, res, next){
+>         const query = req.query;
+> 
+>         if (!id) {
+>             return next(ApiError.badRequest('Не задан ID'))
+>         }
+> 
+>         res.json(query)
+>     }
+> 
+>     ....
+> 
+> }
+> ```
+
+Теперь отправляем GET запрос на адрес `http://localhost:5000/api/user/auth?message=Hello` или просто переходим на этот URL из браузера и видим ответ:
+
+> {"message":"Не задан ID"}
+
+А если отправим GET запрос на адрес `http://localhost:5000/api/user/auth?id=123&message=Hello` то увидим что все нормально:
+
+> {"id":"123","message":"Hello"}
+
 <br><br><br>
 
 ***

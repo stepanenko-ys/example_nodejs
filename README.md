@@ -51,17 +51,26 @@ https://nodejs.org/ru
 5. <a href="#Структура проекта">Структура проекта</a><br>
 6. <a href="#Создание проекта">Создание проекта</a><br>
 7. <a href="#Перенос настроек в .env">Перенос настроек в .env</a><br>
-7. <a href="#Подключение JWT">Подключение JWT</a><br>
-8. <a href="#Endpoints">Endpoints</a><br>
+8. <a href="#Подключение JWT">Подключение JWT</a><br>
+9. <a href="#Endpoints">Endpoints</a><br>
 10. <a href="#Validators">Validators</a><br>
+
+
 11. <a href="#Connect to MongoDB">Connect to MongoDB</a><br>
-9. <a href="#Models for MongoDB">Models (for mongodb)</a><br>
-11. <a href="#Connect to PostgreSQL">Connect to PostgreSQL</a><br>
-9. <a href="#Models for PostgreSQL">Models (for postgresql)</a><br>
-12. <a href="#DB - CRUD">DB - CRUD</a><br>
+12. <a href="#Models for MongoDB">Models (for mongodb)</a><br>
+13. <a href="#CRUD (for MongoDB)">CRUD (for MongoDB)</a><br>
+
+
+14. <a href="#Connect to PostgreSQL">Connect to PostgreSQL</a><br>
+15. <a href="#Models for PostgreSQL">Models (for postgresql)</a><br>
+16. <a href="#CRUD (for PostgreSQL)">CRUD (for PostgreSQL)</a><br>
+
+
 13. <a href="#Шифрование паролей">Шифрование паролей</a><br>
 14. <a href="#Регистрация и Авторизация пользователей">Регистрация и Авторизация пользователей</a><br>
-15. <a href="#Загрузка картинок (Multer)">Загрузка картинок (Multer)</a><br>
+15. <a href="#Загрузка картинок (Express-Fileupload)">Загрузка картинок (Express-Fileupload)</a><br>
+16. <a href="#Загрузка картинок (Multer)">Загрузка картинок (Multer)</a><br>
+15. <a href="#Настройка статики">Настройка статики</a><br>
 16. <a href="#CORS">CORS</a><br>
 17. <a href="#QUERY параметры">QUERY параметры</a><br>
 18. <a href="#XXX">XXX</a><br>
@@ -745,6 +754,147 @@ user:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true 
 
 ***
 
+<a id="CRUD (for MongoDB)"></a>
+
+# 12. CRUD (for MongoDB)
+
+<br>
+
+### Получить запись из БД:
+
+```
+// With "findOne"
+const user = await UserModel.findOne({ email: req.body.email });
+
+// With "findById"
+const user = await UserModel.findById(req.userId);
+ 
+// Достать все статьи и связанных с ними юзеров
+const posts = await PostModel.find().populate('user').exec();
+
+
+```
+
+<br><br>
+
+### Создаем запись в БД:
+
+```
+...
+
+import UserModel from './models/User.js'
+ 
+...
+ 
+app.post('/auth/register', registerValidation, async (req, res) => {
+
+    ...
+
+    const doc = new UserModel({
+        email: req.body.email,
+        fullName: req.body.fullName,
+        avatarUrl: req.body.avatarUrl,
+        passwordHash: hash,
+    })
+
+    const user = await doc.save();
+
+    res.json({... user._doc})
+})
+
+...
+``` 
+
+Теперь отправляем POST запрос на адрес `http://localhost:4444/auth/register` со следующими данными:
+
+```
+{
+    "email": "test@test.com",
+    "password": "12345",
+    "fullName": "Вася Пупкин",
+    "avatarUrl": "https://xxx.ua/photo.jpg"
+}
+```
+
+И у нас в БД создается новый пользователь.
+
+Ответ на наш запрос мы получаем примерно следующим: 
+
+```
+{
+    "user": {
+        "fullName": "Вася Пупкин",
+        "email": "test@test.com",
+        "passwordHash": "$2b$10$.iZnGrNNGuC3k/mGNBeAA.72fnqw.ANmCF/rW3OXjCSVYahqk1/m6",
+        "avatarUrl": "https://xxx.ua/photo.jpg",
+        "_id": "645b594684c32a5ceec95806",
+        "createdAt": "2023-05-10T08:43:50.269Z",
+        "updatedAt": "2023-05-10T08:43:50.269Z",
+        "__v": 0
+    }
+}
+```
+<br><br>
+
+### Изменить запись в БД:
+###### updateOne
+
+```
+try {
+    const postId = req.params.id;
+
+    await PostModel.updateOne(
+        {
+            _id: postId
+        }, {
+            title: req.body.title,
+            text: req.body.text,
+            imageUrl: req.body.imageUrl,
+            tags: req.body.tags,
+            user: req.userId,
+        }
+    )
+    res.json({
+        success: true
+    })
+} catch (err) {
+    console.log(err);
+    res.status(500).json({message: 'Не удалось обновить статью'})
+}
+```
+
+<br><br>
+
+### Удалить запись из БД:
+###### findOneAndDelete
+
+```
+try {
+    const postId = req.params.id;
+
+    PostModel.findOneAndDelete({_id: postId})
+        .then((result) => {
+            if (result) {
+                res.status(200).json({ message: 'Статья успешно удалена' });
+            } else {
+                res.status(404).json({ message: 'Статья не найдена' });
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+            return res.status(500).json({message: 'Не удалось удалить статью'})
+        })
+
+} catch (err) {
+    console.log(err);
+    res.status(500).json({message: 'Не удалось получить статью'})
+}
+```
+
+<br><br><br>
+
+***
+
 <a id="Connect to PostgreSQL"></a>
 
 # 11. Connect to PostgreSQL
@@ -947,141 +1097,46 @@ ManyToMany...,
 
 ***
 
-<a id="DB - CRUD"></a>
+<a id="CRUD (for PostgreSQL)"></a>
 
-# 12. DB - CRUD
+# 12. CRUD (for PostgreSQL)
 
 <br>
 
-### Получить запись из БД:
+### Получить все записи из БД:
 
 ```
-// With "findOne"
-const user = await UserModel.findOne({ email: req.body.email });
-
-// With "findById"
-const user = await UserModel.findById(req.userId);
- 
-// Достать все статьи и связанных с ними юзеров
-const posts = await PostModel.find().populate('user').exec();
-
-
+// findAll
+const brands = await Brand.findAll()
 ```
 
-<br><br>
-
-### Создаем запись в БД:
+### Получить одну запись из БД:
 
 ```
-...
-
-import UserModel from './models/User.js'
- 
-...
- 
-app.post('/auth/register', registerValidation, async (req, res) => {
-
-    ...
-
-    const doc = new UserModel({
-        email: req.body.email,
-        fullName: req.body.fullName,
-        avatarUrl: req.body.avatarUrl,
-        passwordHash: hash,
-    })
-
-    const user = await doc.save();
-
-    res.json({... user._doc})
-})
-
-...
-``` 
-
-Теперь отправляем POST запрос на адрес `http://localhost:4444/auth/register` со следующими данными:
-
-```
-{
-    "email": "test@test.com",
-    "password": "12345",
-    "fullName": "Вася Пупкин",
-    "avatarUrl": "https://xxx.ua/photo.jpg"
-}
+// findOne
+const {id} = req.params;
+const device = await Device.findOne({
+    where: {id: id}
+})        
 ```
 
-И у нас в БД создается новый пользователь.
+<br>
 
-Ответ на наш запрос мы получаем примерно следующим: 
-
-```
-{
-    "user": {
-        "fullName": "Вася Пупкин",
-        "email": "test@test.com",
-        "passwordHash": "$2b$10$.iZnGrNNGuC3k/mGNBeAA.72fnqw.ANmCF/rW3OXjCSVYahqk1/m6",
-        "avatarUrl": "https://xxx.ua/photo.jpg",
-        "_id": "645b594684c32a5ceec95806",
-        "createdAt": "2023-05-10T08:43:50.269Z",
-        "updatedAt": "2023-05-10T08:43:50.269Z",
-        "__v": 0
-    }
-}
-```
-<br><br>
-
-### Изменить запись в БД:
-###### updateOne
+### Создать запись в БД:
 
 ```
-try {
-    const postId = req.params.id;
-
-    await PostModel.updateOne(
-        {
-            _id: postId
-        }, {
-            title: req.body.title,
-            text: req.body.text,
-            imageUrl: req.body.imageUrl,
-            tags: req.body.tags,
-            user: req.userId,
-        }
-    )
-    res.json({
-        success: true
-    })
-} catch (err) {
-    console.log(err);
-    res.status(500).json({message: 'Не удалось обновить статью'})
-}
+const brand = await Brand.create({name})
 ```
 
-<br><br>
-
-### Удалить запись из БД:
-###### findOneAndDelete
-
 ```
-try {
-    const postId = req.params.id;
+const uuid = require('uuid')
+const path = require('path')
 
-    PostModel.findOneAndDelete({_id: postId})
-        .then((result) => {
-            if (result) {
-                res.status(200).json({ message: 'Статья успешно удалена' });
-            } else {
-                res.status(404).json({ message: 'Статья не найдена' });
-            }
-        })
-        .catch((error) => {
-            console.error(error);
-            return res.status(500).json({message: 'Не удалось удалить статью'})
-        })
+const {img} = req.files;
+let fileName = uuid.v4() + ".jpg"
+img.mv(path.resolve(__dirname, '..', 'static', fileName))               // Переместить файл картинки в папку статики
 
-} catch (err) {
-    console.log(err);
-    res.status(500).json({message: 'Не удалось получить статью'})
-}
+const device = await Device.create({name, price, brandId, typeId, img: fileName})
 ```
 
 <br><br><br>
@@ -1411,6 +1466,52 @@ mkdir middleware
 
 ***
 
+<a id="Загрузка картинок (Express-Fileupload)"></a>
+
+# 15. Загрузка картинок (Express-Fileupload)
+
+<br>
+
+```bash
+npm install express-fileupload
+```
+
+> nano index.js
+> ```
+> ...
+> 
+> const fileUpload = require('express-fileupload')
+> 
+> ...
+> 
+> app.use(fileUpload({})) // Регистрация бибилиотеки
+> 
+> ...
+> ```
+
+```bash
+npm install uuid
+```
+
+```
+const uuid = require('uuid')
+const path = require('path')
+
+const {img} = req.files;
+let fileName = uuid.v4() + ".jpg"
+img.mv(path.resolve(__dirname, '..', 'static', fileName))               // Переместить файл картинки в папку статики
+
+const device = await Device.create({name, price, brandId, typeId, img: fileName})
+```
+
+```bash
+mkdir static
+```
+
+<br><br><br>
+
+***
+
 <a id="Загрузка картинок (Multer)"></a>
 
 # 15. Загрузка картинок (Multer)
@@ -1460,15 +1561,37 @@ mkdir uploads
 }
 ```
 
-<br><br>
+<br><br><br>
 
-###### Настройка доступа к папке "static":
+***
+
+<a id="Настройка статики"></a>
+
+# 15. Настройка статики
+
+<br>
+
+###### Настройка доступа к папке "static" - Вариант №1:
 
 > app.use('/uploads', express.static('uploads'))
 
 Если приходит запрос на "uploads" - тогда из библиотеки "express" взять функцию "static" и перенаправить в папку "uploads" а далее уже в ней искать файл.
 
 После этого ссылка на нашу картинку `http://localhost:4444/uploads/Screenshot-2023-05-09.png` уже будет работать.
+
+<br><br>
+
+###### Настройка доступа к папке "static" - Вариант №2:
+
+```
+const path = require('path')
+
+...
+
+app.use(express.static(path.resolve(__dirname, 'static')))
+```
+
+После этого ссылка на нашу картинку `http://localhost:4444/Screenshot-2023-05-09.png` уже будет работать.
 
 <br><br><br>
 

@@ -89,6 +89,52 @@ https://nodejs.org/ru
 
 > https://nodejs.org/ru/download
 
+<br><br>
+
+Если нужно установить несколько версий NodeJS на один компьютер - необходимо выполнить следующие шаги:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | zsh
+```
+
+> nano ~/.zshrc
+> ```
+> export NVM_DIR="$HOME/.nvm"
+> [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+> ```
+
+<br>
+
+```bash
+nvm install 14.15.5
+```
+
+```bash
+nvm install 18.16.0
+```
+
+<br>
+
+```bash
+nvm use 14.15.5
+```
+
+```bash
+node -v
+```
+
+<br>
+
+```bash
+nvm use 18.16.0
+```
+
+```bash
+node -v
+```
+
+
+
 <br><br><br>
 
 ***
